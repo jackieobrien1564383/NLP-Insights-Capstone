@@ -28,7 +28,8 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "localhost", "127.0.0.1",
     ".onrender.com",              # allows the Render domain
-    "<YOUR-RENDER-HOST>.onrender.com",  # replace after first deploy
+    "https://nlp-insights-capstone.onrender.com",  # replace after first deploy
+    
 ]
 
 # Application definition
@@ -132,7 +133,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://*.onrender.com",     # Render backend
-    "https://<YOUR-RENDER-HOST>.onrender.com",
+    "https://nlp-insights-capstone.onrender.com",
     "https://nlp-insights-capstone.vercel.app/"
 ]
 
