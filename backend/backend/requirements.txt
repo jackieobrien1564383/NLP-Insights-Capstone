@@ -11,3 +11,5 @@ django-cors-headers
 flask
 flask-cors
 gensim
+pandas          # <-- added by Jackie for render
+gunicorn        # <-- added by Jackie for render
