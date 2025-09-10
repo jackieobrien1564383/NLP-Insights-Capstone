@@ -23,10 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-@!dq1k%%v2-1v2hr_w_tev7e&xjlet1a=e4%*8kijxpj$6yi%('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False  
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    "localhost", "127.0.0.1",
+    ".onrender.com",              # allows the Render domain
+    "<YOUR-RENDER-HOST>.onrender.com",  # replace after first deploy
+]
 
 # Application definition
 
@@ -126,8 +129,11 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://*.onrender.com",     # Render backend
+    "https://<YOUR-RENDER-HOST>.onrender.com",
+    "https://nlp-insights-capstone.vercel.app/"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -135,8 +141,17 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://nlp-insights-capstone.vercel.app/"
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# Requests behind Render’s proxy should be considered HTTPS
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# ------------ STATIC (optional but good) ------------
+STATIC_URL = "static/"
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Session configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database sessions
