@@ -20,7 +20,6 @@ from api.keyness.keyness_analyser import (
     filter_content_words,
     filter_all_words,
 )
-import spacy
 import mimetypes
 from django.core.files.uploadedfile import UploadedFile
 from .models import KeynessResult
