@@ -160,3 +160,7 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True  # Set to True in production with HTTPS
 SESSION_SAVE_EVERY_REQUEST = True  # Update session on every request
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# To facilitate cookies across origins (e.g., Vercel app embedded in Figma)
+SESSION_COOKIE_SAMESITE = "None" 
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True   
