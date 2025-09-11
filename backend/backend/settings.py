@@ -28,8 +28,7 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "localhost", "127.0.0.1",
     ".onrender.com",              # allows the Render domain
-    "https://nlp-insights-capstone.onrender.com",  # replace after first deploy
-    
+    "nlp-insights-capstone.onrender.com", 
 ]
 
 # Application definition
@@ -134,7 +133,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://*.onrender.com",     # Render backend
     "https://nlp-insights-capstone.onrender.com",
-    "https://nlp-insights-capstone.vercel.app"
+    "https://nlp-insights-capstone.vercel.app",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -142,7 +141,7 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://nlp-insights-capstone.vercel.app"
+    "https://nlp-insights-capstone.vercel.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
