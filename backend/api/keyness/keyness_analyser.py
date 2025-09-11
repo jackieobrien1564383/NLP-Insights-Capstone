@@ -8,17 +8,17 @@ import numpy as np
 from scipy.stats import chi2_contingency
 from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
-import spacy
 from sklearn.feature_extraction.text import CountVectorizer
+from api.nlp import get_nlp
 
 nltk.download("punkt", quiet=True)
 
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    from spacy.cli import download
-    download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
+# try: ( deleted to conserve memory on Render)
+#     nlp = spacy.load("en_core_web_sm")
+# except OSError:
+#     from spacy.cli import download
+#     download("en_core_web_sm")
+#     nlp = spacy.load("en_core_web_sm")
 
 ALLOWED_POS = {"NOUN", "VERB", "ADJ", "ADV"}
 
@@ -26,8 +26,10 @@ ALLOWED_POS = {"NOUN", "VERB", "ADJ", "ADV"}
 # Filtering functions
 # ---------------------------
 
-def filter_content_words(text):
+def filter_content_words(text, nlp=None):
     """Keep only nouns, verbs, adjectives, and adverbs."""
+    if nlp is None:
+        nlp = get_nlp()
     doc = nlp(text)
     return [
         token.lemma_.lower()
@@ -36,8 +38,10 @@ def filter_content_words(text):
     ]
 
 
-def filter_all_words(text):
+def filter_all_words(text, nlp=None):
     """Keep all alphabetic tokens > 2 chars, lemmatized + lowercased."""
+    if nlp is None:
+        nlp = get_nlp()
     doc = nlp(text)
     return [
         token.lemma_.lower()
@@ -137,8 +141,13 @@ def keyness_gensim(uploaded_text, corpus_text, top_n=20, filter_func=filter_cont
 
 
 def keyness_spacy(uploaded_text, corpus_text, top_n=20, filter_func=filter_content_words):
+    nlp = get_nlp()
     tokens_uploaded = filter_func(uploaded_text)
     tokens_corpus = filter_func(corpus_text)
+    nlp = get_nlp()
+    tokens_uploaded = filter_func(uploaded_text, nlp=nlp)
+    tokens_corpus = filter_func(corpus_text, nlp=nlp)
+
 
     total_uploaded = len(tokens_uploaded)
     total_corpus = len(tokens_corpus)
