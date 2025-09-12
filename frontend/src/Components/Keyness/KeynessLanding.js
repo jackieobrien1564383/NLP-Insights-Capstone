@@ -73,7 +73,7 @@ const KeynessLanding = ({ onBack }) => {
     <div>
       <button
         onClick={onBack}
-        className="mb-6 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded shadow"
+        className="ttc-button ttc-button-sm ttc-mb-6"
       >
         ← Back
       </button>
@@ -95,7 +95,7 @@ const KeynessLanding = ({ onBack }) => {
       <div className="text-center">
         <button
           onClick={handleContinue}
-          className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg shadow-lg hover:from-purple-700 hover:to-blue-700 transform hover:-translate-y-1 transition-all"
+          className="ttc-button ttc-button-lg"
         >
           Continue to Analysis →
         </button>
