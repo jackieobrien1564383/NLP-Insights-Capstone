@@ -31,6 +31,10 @@ def filter_content_words(text, nlp=None):
     if nlp is None:
         nlp = get_nlp()
     doc = nlp(text)
+    has_pos = any(t.pos_ for t in doc)  # crude check
+    if not has_pos:
+        # fallback: behave like "all words"
+        return [t.lemma_.lower() for t in doc if t.is_alpha and len(t) > 2]
     return [
         token.lemma_.lower()
         for token in doc
