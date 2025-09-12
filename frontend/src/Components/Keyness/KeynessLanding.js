@@ -69,40 +69,31 @@ const KeynessLanding = ({ onBack }) => {
   }
 
   return (
-    
-    <div>
-      <button
-        onClick={onBack}
-        className="ttc-button ttc-button-sm ttc-mb-6"
-      >
-        ← Back
+  <div className="ttc-container keyness-page">
+    {/* header row */}
+    <div className="keyness-header">
+      <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
+      <h1 className="keyness-title">Keyness Analysis</h1>
+    </div>
+
+    {/* main content */}
+    <TextInputSection
+      pastedText={pastedText}
+      handleTextPaste={handleTextPaste}
+      pastedWordCount={pastedWordCount}
+      uploadedPreview={uploadedPreview}
+      corpusPreview={corpusPreview}
+      error={error}
+      onFilesUploaded={handleFilesUploaded}
+    />
+
+    {/* actions (left-aligned) */}
+    <div className="keyness-actions">
+      <button onClick={handleContinue} className="ttc-button ttc-button-lg">
+        Continue to Analysis →
       </button>
-      
-      <h1 className="text-3xl font-bold mb-6">Keyness Analysis</h1>
-
-      <div className="keyness-container">
-
-      <TextInputSection
-        pastedText={pastedText}
-        handleTextPaste={handleTextPaste}
-        pastedWordCount={pastedWordCount}
-        uploadedPreview={uploadedPreview}
-        corpusPreview={corpusPreview}
-        error={error}
-        onFilesUploaded={handleFilesUploaded}
-      />
-
-      <div className="text-center">
-        <button
-          onClick={handleContinue}
-          className="ttc-button ttc-button-lg"
-        >
-          Continue to Analysis →
-        </button>
-      </div>
     </div>
-    </div>
-  );
-};
+  </div>
+);
 
 export default KeynessLanding;
