@@ -134,8 +134,11 @@
 }
 
 /* back + title row */
-.keyness-header{ 
-  margin-bottom: .5rem;  /* less space under the header */
+.keyness-header{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 .75rem;
 }
 
 /* title itself shouldn’t add extra space */
@@ -162,11 +165,11 @@
   margin-top: .75rem;    /* was larger by inheritance */
 }
 
-/* keep the Continue button visible without scrolling
+/* keep the Continue button visible without scrolling */
 .keyness-actions{
   position: sticky;
   bottom: 16px;
   background: linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.6) 40%, transparent);
   padding: .5rem 0;
 }
-*/
+
