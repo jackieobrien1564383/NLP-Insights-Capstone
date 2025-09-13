@@ -124,3 +124,49 @@
     padding: 1rem;
   }
 }
+
+/* -------- Compact spacing overrides -------- */
+
+/* tighten the global vertical rhythm on this page */
+.keyness-container{
+  padding-top: 1rem;     /* was 2rem */
+  gap: .75rem;           /* was 1.5rem */
+}
+
+/* back + title row */
+.keyness-header{ 
+  margin-bottom: .5rem;  /* less space under the header */
+}
+
+/* title itself shouldn’t add extra space */
+.keyness-title{ 
+  margin: 0; 
+  line-height: 1.2; 
+}
+
+/* the main content block (the textarea, dropzone, previews) */
+.keyness-main > * + *{
+  margin-top: .75rem;    /* reduce stacking gaps between children */
+}
+
+/* specific bits can be a touch tighter than default */
+.keyness-dropzone,
+.keyness-file-list,
+.keyness-preview,
+.keyness-corpus-preview{
+  margin-top: .75rem;
+}
+
+/* actions row (Continue button) */
+.keyness-actions{
+  margin-top: .75rem;    /* was larger by inheritance */
+}
+
+/* keep the Continue button visible without scrolling
+.keyness-actions{
+  position: sticky;
+  bottom: 16px;
+  background: linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.6) 40%, transparent);
+  padding: .5rem 0;
+}
+*/
