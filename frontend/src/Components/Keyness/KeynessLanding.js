@@ -94,6 +94,6 @@ return (
     </div>
   </div>
  );
-);
+};
 
 export default KeynessLanding;
