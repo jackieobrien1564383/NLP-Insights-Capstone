@@ -66,15 +66,15 @@ const KeynessLanding = ({ onBack }) => {
     );
   }
 
-  return (
-    <div className="keyness-container">
-      {/* header row */}
-      <div className="keyness-header">
-        <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
-        <h1 className="keyness-title">Keyness Analysis</h1>
-      </div>
+return (
+  <div className="keyness-container">
+    {/* header row: back + title on the same line */}
+    <div className="keyness-header">
+      <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
+      <h1 className="keyness-title">Keyness Analysis</h1>
+    </div>
 
-      {/* main content */}
+    {/* wrap main content so spacing rules can target it */}
     <div className="keyness-main">
       <TextInputSection
         pastedText={pastedText}
@@ -87,14 +87,12 @@ const KeynessLanding = ({ onBack }) => {
       />
     </div>
 
-      {/* actions (left-aligned) */}
-      <div className="keyness-actions">
-        <button onClick={handleContinue} className="ttc-button ttc-button-lg">
-          Continue to Analysis →
-        </button>
-      </div>
+    <div className="keyness-actions">
+      <button onClick={handleContinue} className="ttc-button ttc-button-lg">
+        Continue to Analysis →
+      </button>
     </div>
-  );
-};
+  </div>
+);
 
 export default KeynessLanding;
