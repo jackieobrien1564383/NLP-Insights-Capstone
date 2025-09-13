@@ -65,7 +65,7 @@ const KeynessLanding = ({ onBack }) => {
       />
     );
   }
-
+ 
 return (
   <div className="keyness-container">
     {/* header row: back + title on the same line */}
