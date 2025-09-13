@@ -111,20 +111,6 @@
   background: linear-gradient(90deg, #9333ea, #2563eb);
 }
 
-/* Responsive design - make it wider on small screens */
-@media (max-width: 768px) {
-  .keyness-container {
-    max-width: 90%;
-  }
-}
-
-@media (max-width: 480px) {
-  .keyness-container {
-    max-width: 95%;
-    padding: 1rem;
-  }
-}
-
 /* -------- Compact spacing overrides -------- */
 
 /* tighten the global vertical rhythm on this page */
