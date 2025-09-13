@@ -75,6 +75,7 @@ const KeynessLanding = ({ onBack }) => {
       </div>
 
       {/* main content */}
+    <div className="keyness-main">
       <TextInputSection
         pastedText={pastedText}
         handleTextPaste={handleTextPaste}
@@ -84,6 +85,7 @@ const KeynessLanding = ({ onBack }) => {
         error={error}
         onFilesUploaded={handleFilesUploaded}
       />
+    </div>
 
       {/* actions (left-aligned) */}
       <div className="keyness-actions">
