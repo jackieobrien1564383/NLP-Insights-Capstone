@@ -104,3 +104,65 @@ button.ttc-btn,    .ttc-btn {
 /* Sizes */
 .ttc-button-sm, .ttc-btn--sm { height:32px; padding:6px 12px; font-size:13px; }
 .ttc-button-lg, .ttc-btn--lg { height:44px; padding:10px 22px; font-size:15.5px; }
+
+/* ======================
+   APP LAYOUT / SHELL
+   ====================== */
+.app-hero {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--ttc-grad-start), var(--ttc-grad-end));
+}
+
+/* ======================
+   CARDS
+   ====================== */
+.tcc-card {
+  width: min(640px, 100%);
+  background: rgba(255,255,255,.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--ttc-border);
+  border-radius: 20px;
+  box-shadow: 0 18px 48px -16px rgba(15,23,42,.35);
+  padding: 28px;
+}
+
+.tcc-title { margin: 0 0 12px; font-size: 2rem; font-weight: 800; color: #0f172a; }
+.tcc-sub   { margin: 0 0 18px; color: #475569; }
+
+/* ======================
+   FORMS / INPUTS
+   ====================== */
+.tcc-select,
+.tcc-input,
+.tcc-textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--ttc-border);
+  padding: 10px 12px;
+  outline: none;
+  color: #0f172a;
+  background: #fff;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+.tcc-textarea { min-height: 10rem; resize: vertical; }
+
+.tcc-select:focus,
+.tcc-input:focus,
+.tcc-textarea:focus {
+  border-color: rgba(59,130,246,.45);
+  box-shadow: 0 0 0 4px var(--ttc-ring-soft);
+}
+
+/* ======================
+   PAGE-SPECIFIC HOOKS
+   ====================== */
+.keyness-container { width: 80%; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.keyness-header { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
+.keyness-title { margin: 0; line-height: 1.2; }
+.keyness-main > * + * { margin-top: 12px; }
+.keyness-actions { margin-top: 12px; display: flex; justify-content: flex-end; position: sticky; bottom: 16px; background: linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.6) 40%, transparent); padding: 8px 0; }
+
+
