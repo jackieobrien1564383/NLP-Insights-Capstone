@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TextInputSection from "../TextInputSection";
 import KeynessAnalyser from "./KeynessAnalyser";
-import './KeynessLanding.css';
+import "./KeynessLanding.css";
 
 const KeynessLanding = ({ onBack }) => {
   const [pastedText, setPastedText] = useState("");
@@ -13,41 +13,39 @@ const KeynessLanding = ({ onBack }) => {
   const [corpusPreview, setCorpusPreview] = useState("");
   const [pastedWordCount, setPastedWordCount] = useState(0);
 
- useEffect(() => {
-  const fetchCorpusPreview = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/api/corpus-preview/", {
-        credentials: 'include'  
-      });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setCorpusPreview(data.preview.split("\n").slice(0, 4).join("\n"));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  fetchCorpusPreview();
-}, []);
+  useEffect(() => {
+    const fetchCorpusPreview = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/corpus-preview/", {
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        setCorpusPreview(data.preview.split("\n").slice(0, 4).join("\n"));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchCorpusPreview();
+  }, []);
 
   const handleTextPaste = (e) => {
-  const text = e.target.value;
-  setPastedText(text);
-  setUploadedText(text);
-  setUploadedPreview(text.split("\n").slice(0, 4).join("\n"));
-  setActiveInput("text");
+    const text = e.target.value;
+    setPastedText(text);
+    setUploadedText(text);
+    setUploadedPreview(text.split("\n").slice(0, 4).join("\n"));
+    setActiveInput("text");
 
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  setPastedWordCount(words.length);
-};
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    setPastedWordCount(words.length);
+  };
 
-  const handleFilesUploaded = (combinedText, files) => {
+  const handleFilesUploaded = (combinedText) => {
     setUploadedText(combinedText);
     setUploadedPreview(combinedText.split("\n").slice(0, 4).join("\n"));
     setActiveInput("file");
-    setError(""); // clear previous errors
+    setError("");
   };
-
-  
 
   const handleContinue = () => {
     if (!uploadedText.trim()) {
@@ -69,32 +67,32 @@ const KeynessLanding = ({ onBack }) => {
   }
 
   return (
-  <div className="ttc-container keyness-page">
-    {/* header row */}
-    <div className="keyness-actions">
-      <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
-      </button>
+    <div className="keyness-container">
+      {/* header row */}
+      <div className="keyness-header">
+        <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
+        <h1 className="keyness-title">Keyness Analysis</h1>
+      </div>
 
-    {/* main content */}
-    
-    <h1 className="keyness-title">Keyness Analysis</h1>
-    <TextInputSection
-      pastedText={pastedText}
-      handleTextPaste={handleTextPaste}
-      pastedWordCount={pastedWordCount}
-      uploadedPreview={uploadedPreview}
-      corpusPreview={corpusPreview}
-      error={error}
-      onFilesUploaded={handleFilesUploaded}
-    />
+      {/* main content */}
+      <TextInputSection
+        pastedText={pastedText}
+        handleTextPaste={handleTextPaste}
+        pastedWordCount={pastedWordCount}
+        uploadedPreview={uploadedPreview}
+        corpusPreview={corpusPreview}
+        error={error}
+        onFilesUploaded={handleFilesUploaded}
+      />
 
-    {/* actions (left-aligned) */}
-    <div className="keyness-actions">
-      <button onClick={handleContinue} className="ttc-button ttc-button-lg">
-        Continue to Analysis →
-      </button>
+      {/* actions (left-aligned) */}
+      <div className="keyness-actions">
+        <button onClick={handleContinue} className="ttc-button ttc-button-lg">
+          Continue to Analysis →
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default KeynessLanding;
