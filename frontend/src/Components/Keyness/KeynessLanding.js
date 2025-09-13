@@ -17,7 +17,7 @@ const KeynessLanding = ({ onBack }) => {
   const fetchCorpusPreview = async () => {
     try {
       const response = await fetch("http://localhost:8000/api/corpus-preview/", {
-        credentials: 'include'  // Add this line
+        credentials: 'include'  
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -71,12 +71,13 @@ const KeynessLanding = ({ onBack }) => {
   return (
   <div className="ttc-container keyness-page">
     {/* header row */}
-    <div className="keyness-header">
+    <div className="keyness-actions">
       <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
-      <h1 className="keyness-title">Keyness Analysis</h1>
-    </div>
+      </button>
 
     {/* main content */}
+    
+    <h1 className="keyness-title">Keyness Analysis</h1>
     <TextInputSection
       pastedText={pastedText}
       handleTextPaste={handleTextPaste}
