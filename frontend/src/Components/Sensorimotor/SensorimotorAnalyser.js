@@ -1,6 +1,6 @@
 import React from "react";
 
-const SensorimotorAnalyser = () => {
+const SensorimotorAnalyser = ({ onBack }) => {
   return (
     <div className="analysis-container">
       {/* header row: back + title on one line */}
