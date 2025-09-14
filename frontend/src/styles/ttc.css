@@ -233,6 +233,23 @@ button.ttc-btn,    .ttc-btn {
   box-shadow: 0 6px 18px -12px rgba(15,23,42,.25);
 }
 
-/* Headings */
-.tcc-h3 { margin: 0 0 12px; font-size: 1.125rem; font-weight: 700; color: #0f172a; }
+/* Small label/eyebrow text */
+.tcc-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin: 0 0 8px;
+}
+
+/* Monospace preview block */
+.tcc-pre {
+  white-space: pre-wrap;
+  background: #fff;
+  padding: 12px;
+  border: 1px solid var(--ttc-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: monospace;
+  margin: 0;
+}
 
