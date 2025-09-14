@@ -66,17 +66,15 @@ const SentimentLanding = ({ onBack }) => {
   }
 
   return (
-    <div>
-      <button
-        onClick={onBack}
-        className="mb-6 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded shadow"
-      >
-        ← Back
-      </button>
+  <div className="analysis-container">
+    {/* header row: back + title on the same line */}
+    <div className="analysis-header">
+      <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
+      <h1 className="analysis-title">Sentiment Analysis</h1>
+    </div>
 
-      <h1 className="text-3xl font-bold mb-6">Sentiment Analysis</h1>
-
-      <div className="sentiment-container">
+    {/* wrap main content so spacing rules can target it */}
+    <div className="analysis-main">
         <TextInputSection
           pastedText={pastedText}
           handleTextPaste={handleTextPaste}
@@ -86,18 +84,15 @@ const SentimentLanding = ({ onBack }) => {
           error={error}
           onFilesUploaded={handleFilesUploaded}
         />
+    </div>
 
-        <div className="text-center">
-          <button
-            onClick={handleContinue}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg shadow-lg hover:from-purple-700 hover:to-blue-700 transform hover:-translate-y-1 transition-all"
-          >
+    <div className="analysis-actions">
+      <button onClick={handleContinue} className="ttc-button ttc-button-lg">
             Continue to Analysis →
           </button>
-        </div>
-      </div>
     </div>
-  );
+  </div>
+ );
 };
 
 export default SentimentLanding;
