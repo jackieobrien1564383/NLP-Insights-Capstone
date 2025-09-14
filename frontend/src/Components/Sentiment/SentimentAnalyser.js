@@ -43,7 +43,7 @@ export default function SentimentAnalyser({ uploadedText, uploadedPreview, corpu
         <button onClick={onBack} className="ttc-button ttc-button-sm">
           ← Back
         </button>
-        <h1 className="analysis-title">Sentiment</h1>
+        <h1 className="analysis-title">Sentiment Analysis</h1>
       </div>
 
       {/* Loading */}
