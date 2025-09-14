@@ -114,6 +114,11 @@ button.ttc-btn,    .ttc-btn {
 .ttc-button-lg, .ttc-btn--lg { height:44px; padding:10px 22px; font-size:15.5px; }
 
 /* ======================
+   Select Files Button
+   ====================== */
+.ttc-button-wide, .ttc-btn--wide { width: 100%; align-self: stretch; flex: 1 1 auto; }
+
+/* ======================
    APP LAYOUT / SHELL
    ====================== */
 .app-hero {
