@@ -576,8 +576,6 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
           <pre
             style={{
               whiteSpace: "pre-wrap",
-              maxHeight: "200px",
-              overflow: "auto",
               backgroundColor: "#ffffff",
               padding: "12px",
               borderRadius: "4px",
