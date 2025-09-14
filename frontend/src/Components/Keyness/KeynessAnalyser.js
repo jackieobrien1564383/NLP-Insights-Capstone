@@ -82,37 +82,40 @@ const KeynessAnalyser = ({ uploadedText, uploadedPreview, corpusPreview, method,
 
   return (
     
-    <div className="mb-6">
-      <button
-  onClick={onBack}
-  className="mb-6 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded shadow"
->
-  ← Back
-</button>
+    <div className="tcc-content tcc-stack-lg">
+    {/* Back Button */}
+    <button
+      onClick={onBack}
+      className="ttc-button ttc-button-outline ttc-button-sm"
+    >
+      ← Back
+    </button>
 
 {/* Word Filtering Options */}
-    <div className="mb-6 text-center">
-      <p className="mb-2 font-medium">Select an option for what words in your text you would like analysed:</p>
-      <div className="flex justify-center gap-6">
-        <label className="flex items-center gap-2">
+    <div className="tcc-stack-md" style={{ textAlign: "center" }}>
+      <p className="tcc-sub" style={{ margin: 0 }}>
+        Select an option for what words in your text you would like analysed:
+      </p>
+
+      <div className="tcc-radios">
+        <label className="tcc-radio">
           <input
             type="radio"
             name="filterMode"
             value="content"
             checked={filterMode === "content"}
             onChange={(e) => setFilterMode(e.target.value)}
-            className="mr-1"
           />
           <span>Only content words (nouns, verbs, adjectives, adverbs)</span>
         </label>
-        <label className="flex items-center gap-2">
+
+        <label className="tcc-radio">
           <input
             type="radio"
             name="filterMode"
             value="all"
             checked={filterMode === "all"}
             onChange={(e) => setFilterMode(e.target.value)}
-            className="mr-1"
           />
           <span>All words</span>
         </label>
@@ -120,57 +123,58 @@ const KeynessAnalyser = ({ uploadedText, uploadedPreview, corpusPreview, method,
     </div>
 
       {/* Analyse Button */}
-      <div className="text-center mb-6 flex justify-center gap-4">
-  <button
-    onClick={() => performAnalysis("NLTK")}
-    disabled={loading || !uploadedText}
-    className="btn"
-  >
-    Analyse with NLTK
-  </button>
+      <div className="tcc-btnrow">
+      <button
+        onClick={() => performAnalysis("NLTK")}
+        disabled={loading || !uploadedText}
+        className="ttc-button ttc-button-lg"
+      >
+        Analyse with NLTK
+      </button>
 
-  <button
-    onClick={() => performAnalysis("sklearn")}
-    disabled={loading || !uploadedText}
-    className="btn"
-  >
-    Analyse with Scikit-Learn
-  </button>
+      <button
+        onClick={() => performAnalysis("sklearn")}
+        disabled={loading || !uploadedText}
+        className="ttc-button ttc-button-lg"
+      >
+        Analyse with Scikit-Learn
+      </button>
 
-  <button
-    onClick={() => performAnalysis("gensim")}
-    disabled={loading || !uploadedText}
-    className="btn"
-  >
-    Analyse with Gensim
-  </button>
+      <button
+        onClick={() => performAnalysis("gensim")}
+        disabled={loading || !uploadedText}
+        className="ttc-button ttc-button-lg"
+      >
+        Analyse with Gensim
+      </button>
 
-  <button
-  onClick={() => performAnalysis("spaCy")}
-  disabled={loading || !uploadedText}
-  className="btn"
->
-  Analyse with spaCy
-</button>
+      <button
+        onClick={() => performAnalysis("spaCy")}
+        disabled={loading || !uploadedText}
+        className="ttc-button ttc-button-lg"
+      >
+        Analyse with spaCy
+      </button>
+    </div>
 
-</div>
+     {/* Progress */}
+    {loading && (
+      <div className="tcc-content" style={{ maxWidth: 640 }}>
+        <ProgressBar loading={loading} />
+      </div>
+    )}
 
-     {loading && (
-  <div className="w-full max-w-xl mx-auto mt-4">
-  <ProgressBar loading={loading} />
-</div>
-)}
+    {/* Error */}
+    {error && <p className="tcc-error">{error}</p>}
 
-      {error && <p className="text-red-500">{error}</p>}
-
-      {analysisDone && (
-  <>
-    {/* Results Summary */}
-    <ResultsSummary
-  stats={stats}
-  selectedMethod={selectedMethod}
-  comparisonResults={comparisonResults}
-/>
+      {/* Results */}
+    {analysisDone && (
+      <>
+        <ResultsSummary
+          stats={stats}
+          selectedMethod={selectedMethod}
+          comparisonResults={comparisonResults}
+        />
 
     {/* Significant Keywords Grid */}
     <KeynessResultsGrid results={comparisonResults.slice(0, 20)} method={selectedMethod} />
