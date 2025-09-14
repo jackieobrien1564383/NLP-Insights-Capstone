@@ -357,20 +357,12 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
       {/* Select Files Button */}
       <button
         type="button"
-        onClick={() =>
-          !uploading && document.getElementById("fileInput").click()
-        }
-        style={{
-          marginTop: "10px",
-          padding: "6px 12px",
-          background: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: uploading ? "not-allowed" : "pointer",
-        }}
+        onClick={() => !uploading && document.getElementById("fileInput")?.click()}
+        className="ttc-button ttc-button-lg tcc-wide"
+        disabled={uploading}
+        aria-busy={uploading}
       >
-        Select Files
+        📎 {uploading ? "Uploading…" : "Select Files"}
       </button>
 
       {/* Upload Success Messages */}
