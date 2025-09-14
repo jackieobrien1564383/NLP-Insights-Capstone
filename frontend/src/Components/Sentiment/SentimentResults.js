@@ -11,28 +11,30 @@ export default function SentimentResults({ data }) {
     const oov = summary?.oov_examples || [];
 
     return (
-        <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white border rounded-2xl p-6 shadow-sm">
-                    <SentimentSummary summary={summary} />
-                </div>
-                <div className="bg-white border rounded-2xl p-6 shadow-sm">
-                    <h3 className="font-semibold mb-4">Emotion Averages</h3>
-                    <EmotionBars emotions={emotions} />
-                </div>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-4">
-                <div className="bg-white border rounded-xl p-4 shadow-sm">
-                    <SentimentWordList title="Top Positive" rows={pos} sign="pos" />
-                </div>
-                <div className="bg-white border rounded-xl p-4 shadow-sm">
-                    <SentimentWordList title="Top Negative" rows={neg} sign="neg" />
-                </div>
-                <div className="bg-white border rounded-xl p-4 shadow-sm">
-                    <OOVList pairs={oov} />
-                </div>
-            </div>
+    <div className="tcc-stack-lg">
+      {/* Summary + Emotion bars */}
+      <div className="tcc-grid tcc-grid-2-md">
+        <div className="tcc-panel">
+          <SentimentSummary summary={summary} />
         </div>
-    );
+        <div className="tcc-panel">
+          <h3 className="tcc-title tcc-title--sm">Emotion Averages</h3>
+          <EmotionBars emotions={emotions} />
+        </div>
+      </div>
+
+      {/* Word lists */}
+      <div className="tcc-grid tcc-grid-3-lg">
+        <div className="tcc-panel">
+          <SentimentWordList title="Top Positive" rows={pos} sign="pos" />
+        </div>
+        <div className="tcc-panel">
+          <SentimentWordList title="Top Negative" rows={neg} sign="neg" />
+        </div>
+        <div className="tcc-panel">
+          <OOVList pairs={oov} />
+        </div>
+      </div>
+    </div>
+  );
 }
