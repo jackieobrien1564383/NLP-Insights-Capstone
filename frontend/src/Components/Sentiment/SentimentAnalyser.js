@@ -37,43 +37,50 @@ export default function SentimentAnalyser({ uploadedText, uploadedPreview, corpu
   }, [uploadedText]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Sentiment</h1>
-          <button onClick={onBack} className="px-3 py-2 text-sm rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800">
-            ← Back
-          </button>
-        </div>
-
-        {state.loading && (
-          <div className="bg-white border rounded-2xl p-8 shadow-sm text-center">
-            <div className="animate-pulse text-gray-500">Analysing your text…</div>
-          </div>
-        )}
-
-        {state.error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
-            Error: {state.error}. Is the API available at <code className="font-mono">{API_URL}</code>?
-          </div>
-        )}
-
-        {!state.loading && !state.error && (
-          <>
-            {previews.length > 0 && (
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
-                {previews.map((b, i) => (
-                  <div key={i} className="bg-white border rounded-xl p-4 shadow-sm">
-                    <div className="text-xs font-semibold text-gray-600 mb-2">{b.label}</div>
-                    <pre className="text-sm text-gray-800 whitespace-pre-wrap leading-snug max-h-48 overflow-auto">{b.body}</pre>
-                  </div>
-                ))}
-              </div>
-            )}
-            <SentimentResults data={data} />
-          </>
-        )}
+    <div className="analysis-container">
+      {/* Header */}
+      <div className="analysis-header">
+        <button onClick={onBack} className="ttc-button ttc-button-sm">
+          ← Back
+        </button>
+        <h1 className="analysis-title">Sentiment</h1>
       </div>
+
+      {/* Loading */}
+      {state.loading && (
+        <div className="tcc-panel" style={{ textAlign: "center" }}>
+          <div className="tcc-sub" style={{ margin: 0 }}>Analysing your text…</div>
+        </div>
+      )}
+
+      {/* Error */}
+      {state.error && (
+        <div className="tcc-panel" style={{ borderColor: "#fecaca", background: "#fff1f2" }}>
+          <div className="tcc-error">Error: {state.error}</div>
+          <div className="tcc-sub" style={{ marginTop: 6 }}>
+            Is the API available at <code>{API_URL}</code>?
+          </div>
+        </div>
+      )}
+
+      {/* Results */}
+      {!state.loading && !state.error && (
+        <>
+          {/* Previews */}
+          {previews.length > 0 && (
+            <div className="tcc-grid tcc-grid-2-md" style={{ marginBottom: 16 }}>
+              {previews.map((b, i) => (
+                <div key={i} className="tcc-panel">
+                  <div className="tcc-eyebrow">{b.label}</div>
+                  <pre className="tcc-pre">{b.body}</pre>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <SentimentResults data={data} />
+        </>
+      )}
     </div>
   );
 }
