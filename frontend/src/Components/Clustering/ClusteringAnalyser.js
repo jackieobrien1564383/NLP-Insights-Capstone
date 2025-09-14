@@ -5,7 +5,7 @@ const ClusteringAnalyser = ({ onBack }) => {
     <div className="analysis-container">
       {/* header row: back + title on one line */}
       <div className="analysis-header">
-        <button onClick={onBack} className="ttc-button ttc-button-sm">
+        <<button type="button" onClick={onBack} className="ttc-button ttc-button-sm">
           ← Back
         </button>
         <h1 className="analysis-title">Clustering Analysis</h1>
