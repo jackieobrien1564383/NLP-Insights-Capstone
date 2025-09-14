@@ -67,15 +67,15 @@ const KeynessLanding = ({ onBack }) => {
   }
  
 return (
-  <div className="keyness-container">
+  <div className="analysis-container">
     {/* header row: back + title on the same line */}
-    <div className="keyness-header">
+    <div className="analysis-header">
       <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
-      <h1 className="keyness-title">Keyness Analysis</h1>
+      <h1 className="analysis-title">Keyness Analysis</h1>
     </div>
 
     {/* wrap main content so spacing rules can target it */}
-    <div className="keyness-main">
+    <div className="analysis-main">
       <TextInputSection
         pastedText={pastedText}
         handleTextPaste={handleTextPaste}
@@ -87,7 +87,7 @@ return (
       />
     </div>
 
-    <div className="keyness-actions">
+    <div className="analysis-actions">
       <button onClick={handleContinue} className="ttc-button ttc-button-lg">
         Continue to Analysis →
       </button>
