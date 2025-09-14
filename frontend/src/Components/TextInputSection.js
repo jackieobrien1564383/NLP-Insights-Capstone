@@ -358,7 +358,7 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
       <button
         type="button"
         onClick={() => !uploading && document.getElementById("fileInput")?.click()}
-        className="ttc-button ttc-button-lg ttc-button-wide"
+        className="ttc-button-wide ttc-button ttc-button-lg"
         disabled={uploading}
         aria-busy={uploading}
       >
