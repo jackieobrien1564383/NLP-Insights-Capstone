@@ -152,8 +152,24 @@ button.ttc-btn,    .ttc-btn {
   padding: 28px;
 }
 
-.tcc-title { margin: 0 0 12px; font-size: 2rem; font-weight: 800; color: #0f172a; }
-.tcc-sub   { margin: 0 0 18px; color: #475569; }
+.tcc-title { 
+  margin: 0 0 12px; 
+  font-size: 2rem; 
+  font-weight: 800; 
+  color: #0f172a; 
+}
+
+.tcc-sub   { 
+  margin: 0 0 18px; 
+  color: #475569; 
+}
+
+.tcc-title--sm { /* smaller heading for panels/sections */
+  margin: 0 0 12px;
+  font-size: 1.125rem;   /* ~18px */
+  font-weight: 700;
+  color: #0f172a;
+}
 
 /* ======================
    FORMS / INPUTS
@@ -198,3 +214,25 @@ button.ttc-btn,    .ttc-btn {
 .tcc-radio    { display:flex; align-items:center; gap:8px; color:#1f2937; }
 .tcc-btnrow   { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
 .tcc-error    { color:#dc2626; font-weight:600; }
+
+/* ======================
+   Grid helpers (responsive)
+   ====================== */ 
+.tcc-grid { display: grid; gap: 16px; }
+@media (min-width: 768px) { .tcc-grid-2-md { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (min-width: 1024px) { .tcc-grid-3-lg { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+
+/* ======================
+   Lightweight panel (smaller than .tcc-card)
+   ====================== */ 
+.tcc-panel {
+  background: #fff;
+  border: 1px solid var(--ttc-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 6px 18px -12px rgba(15,23,42,.25);
+}
+
+/* Headings */
+.tcc-h3 { margin: 0 0 12px; font-size: 1.125rem; font-weight: 700; color: #0f172a; }
+
