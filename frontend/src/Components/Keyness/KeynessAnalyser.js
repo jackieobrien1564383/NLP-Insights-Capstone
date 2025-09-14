@@ -86,7 +86,7 @@ const KeynessAnalyser = ({ uploadedText, uploadedPreview, corpusPreview, method,
     {/* Back Button */}
     <button
       onClick={onBack}
-      className="ttc-button ttc-button-outline ttc-button-sm"
+      className="ttc-button ttc-button-sm"
     >
       ← Back
     </button>
