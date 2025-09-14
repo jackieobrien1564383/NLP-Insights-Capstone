@@ -38,6 +38,11 @@ button.ttc-btn,    .ttc-btn {
   cursor:pointer;
   transition: transform .15s ease, box-shadow .25s ease, filter .25s ease;
   overflow:hidden; user-select:none; will-change: transform;
+
+    /* --- prevent buttons from auto-stretching in flex stacks --- */
+  flex: 0 0 auto;          /* NEW: don't grow/shrink */
+  align-self: flex-start;  /* NEW: don't stretch across cross-axis */
+  width: auto;             /* NEW: size to content */
 }
 
 /* Hover lift + subtle glow */
@@ -116,7 +121,7 @@ button.ttc-btn,    .ttc-btn {
 /* ======================
    Select Files Button
    ====================== */
-.ttc-button-wide, .ttc-btn--wide { width: 100%; align-self: stretch; flex: 1 1 auto; }
+.ttc-button-wide, .ttc-btn--wide { align-self: stretch; width: 100%; }
 
 /* ======================
    APP LAYOUT / SHELL
