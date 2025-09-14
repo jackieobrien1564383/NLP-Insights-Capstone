@@ -182,11 +182,11 @@ button.ttc-btn,    .ttc-btn {
 /* ======================
    PAGE-SPECIFIC HOOKS
    ====================== */
-.keyness-container { width: 80%; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
-.keyness-header { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
-.keyness-title { margin: 0; line-height: 1.2; }
-.keyness-main > * + * { margin-top: 12px; }
-.keyness-actions { margin-top: 12px; display: flex; justify-content: flex-end; position: sticky; bottom: 16px; background: linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.6) 40%, transparent); padding: 8px 0; }
+.analysis-container { width: 80%; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.analysis-header { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
+.analysis-title { margin: 0; line-height: 1.2; }
+.analysis-main > * + * { margin-top: 12px; }
+.analysis-actions { margin-top: 12px; display: flex; justify-content: flex-end; position: sticky; bottom: 16px; background: linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.6) 40%, transparent); padding: 8px 0; }
 
 /* ======================
    Generic layout helpers
