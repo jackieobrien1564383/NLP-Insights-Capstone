@@ -178,4 +178,13 @@ button.ttc-btn,    .ttc-btn {
 .keyness-main > * + * { margin-top: 12px; }
 .keyness-actions { margin-top: 12px; display: flex; justify-content: flex-end; position: sticky; bottom: 16px; background: linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.6) 40%, transparent); padding: 8px 0; }
 
-
+/* ======================
+   Generic layout helpers
+   ====================== */
+.tcc-content { width: min(1000px, 92%); margin: 0 auto; }
+.tcc-stack-md { display:flex; flex-direction:column; gap:16px; }
+.tcc-stack-lg { display:flex; flex-direction:column; gap:24px; }
+.tcc-radios   { display:flex; gap:18px; justify-content:center; flex-wrap:wrap; }
+.tcc-radio    { display:flex; align-items:center; gap:8px; color:#1f2937; }
+.tcc-btnrow   { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.tcc-error    { color:#dc2626; font-weight:600; }
