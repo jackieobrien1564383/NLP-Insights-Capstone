@@ -1,10 +1,12 @@
-import os, threading, csv, io, requests
+import os, json, threading, csv, io, requests
 
-# Public constants (keep order stable)
-MODALITY_ORDER = ["vision","audition","touch","taste","smell",
-                  "interoception","hand","mouth","head","foot","torso"]
+# Keep this order fixed: indexes 0..10 map to these modalities
+MODALITY_ORDER = [
+    "vision","audition","touch","taste","smell",
+    "interoception","hand","mouth","head","foot","torso"
+]
 
-# Accept common header names
+# Accept common header names when falling back to CSV
 MODALITY_SYNONYMS = {
     "vision":["vision","visual"],
     "audition":["audition","auditory","hearing"],
@@ -22,53 +24,97 @@ WORD_COLUMNS = {"word","item","cue","lemma"}
 MODALITY_COLUMNS = {"modality","dimension","channel"}
 SCORE_COLUMNS = {"rating","response","score","value"}
 
-NORMS = None   # dict[str, list[float|None]] kept in-memory for fast lookups
+NORMS = None      # dict[str, list[float|None]]
 READY = False
 _LOCK = threading.Lock()
 
-def _canon_mod(x:str|None):
+def _canon_mod(x: str|None):
     s = (x or "").strip().lower()
     for k, vs in MODALITY_SYNONYMS.items():
-        if s in vs: return k
+        if s in vs:
+            return k
     return None
+
+# ---------- JSON path (preferred) ----------
+
+def _load_json_if_present():
+    """
+    Returns parsed norms object if found (from SM_JSON_URL or local static),
+    otherwise None.
+    """
+    # 1) Remote JSON (optional): e.g., S3/OSF direct link to sm_norms_min.json
+    url = os.environ.get("SM_JSON_URL")
+    if url:
+        r = requests.get(url, timeout=60)
+        r.raise_for_status()
+        return r.json()
+
+    # 2) Local file committed to the repo:
+    #    backend/api/sensorimotor/static/sm_norms_min.json
+    local = os.path.join(os.path.dirname(__file__), "static", "sm_norms_min.json")
+    if os.path.exists(local):
+        with open(local, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    return None
+
+def _build_norms_from_json(obj: dict):
+    """
+    obj format: { "word": [11 floats or null], ... }
+    """
+    norms = {}
+    for w, arr in obj.items():
+        if not isinstance(arr, list):
+            continue
+        # pad/trim to exactly 11
+        fixed = (arr + [None]*11)[:11]
+        if any(v is not None for v in fixed):
+            norms[(w or "").strip().lower()] = fixed
+    return norms
+
+# ---------- CSV fallback (only if JSON missing) ----------
 
 def _detect_wide(headers):
     found = set()
     for h in headers:
         m = _canon_mod(h)
-        if m: found.add(m)
+        if m:
+            found.add(m)
     return len(found) >= 3
 
 def _first(headers, pool:set[str]):
     L = [h.lower() for h in headers]
     for h in L:
-        if h in pool: return h
+        if h in pool:
+            return h
     return None
 
 def _download_csv_bytes():
     url = os.environ.get("SM_CSV_URL")
     if not url:
-        raise RuntimeError("Set SM_CSV_URL to the Lancaster CSV URL (OSF).")
+        raise RuntimeError(
+            "No JSON found. Set SM_JSON_URL or commit static/sm_norms_min.json; "
+            "otherwise set SM_CSV_URL to the Lancaster CSV URL."
+        )
     r = requests.get(url, timeout=90)
     r.raise_for_status()
     return r.content
 
 def _build_norms_from_csv_bytes(b: bytes):
-    global NORMS
-    # First pass: read headers
+    # Parse wide or long CSV into the same dict[word] -> [11 floats|None]
     stream = io.StringIO(b.decode("utf-8", errors="ignore"))
     reader = csv.DictReader(stream)
     headers = reader.fieldnames or []
     wide = _detect_wide(headers)
 
     norms = {}
-
     if wide:
         word_col = _first(headers, WORD_COLUMNS)
         mod_heads = [h for h in headers if _canon_mod(h)]
         for row in csv.DictReader(io.StringIO(b.decode("utf-8", errors="ignore"))):
             w = (row.get(word_col) or "").strip().lower()
-            if not w: continue
+            if not w:
+                continue
             arr = [None]*len(MODALITY_ORDER)
             for h in mod_heads:
                 idx = MODALITY_ORDER.index(_canon_mod(h))
@@ -76,8 +122,10 @@ def _build_norms_from_csv_bytes(b: bytes):
                     v = float(row.get(h)) if row.get(h) not in (None, "") else None
                 except ValueError:
                     v = None
-                if v is not None: arr[idx] = v
-            if any(v is not None for v in arr): norms[w] = arr
+                if v is not None:
+                    arr[idx] = v
+            if any(v is not None for v in arr):
+                norms[w] = arr
     else:
         word_col = _first(headers, WORD_COLUMNS)
         mod_col  = _first(headers, MODALITY_COLUMNS)
@@ -90,53 +138,76 @@ def _build_norms_from_csv_bytes(b: bytes):
                 v = float(row.get(val_col))
             except (TypeError, ValueError):
                 v = None
-            if not w or not m or v is None: continue
+            if not w or not m or v is None:
+                continue
             buckets.setdefault(w, {}).setdefault(m, []).append(v)
         for w, mb in buckets.items():
             arr = [None]*len(MODALITY_ORDER)
             for m, vals in mb.items():
                 idx = MODALITY_ORDER.index(m)
                 arr[idx] = sum(vals)/len(vals)
-            if any(v is not None for v in arr): norms[w] = arr
+            if any(v is not None for v in arr):
+                norms[w] = arr
 
-    NORMS = norms
+    return norms
+
+# ---------- Public API used by your views ----------
 
 def warm_start():
-    # non-blocking background load so boot is snappy on Render
+    """
+    Background load at boot. Prefers JSON; falls back to CSV only if needed.
+    """
     def _job():
-        global READY
+        global READY, NORMS
         try:
+            j = _load_json_if_present()
+            if j:
+                NORMS = _build_norms_from_json(j)
+                READY = True
+                print("[sensorimotor] Loaded norms from JSON.", flush=True)
+                return
+            # JSON not found — try CSV
             csv_bytes = _download_csv_bytes()
-            _build_norms_from_csv_bytes(csv_bytes)
+            NORMS = _build_norms_from_csv_bytes(csv_bytes)
             READY = True
+            print("[sensorimotor] Loaded norms from CSV.", flush=True)
         except Exception as e:
-            # Don't crash the app; stay lazy-loadable.
             print("[sensorimotor] Warm start failed:", e, flush=True)
     threading.Thread(target=_job, daemon=True).start()
 
 def ensure_loaded():
-    # Lazy load if warm_start didn’t run yet or failed
-    global READY
+    """
+    Synchronous, on-demand load (same preference: JSON first).
+    """
+    global READY, NORMS
     if READY and NORMS is not None:
         return
     with _LOCK:
         if READY and NORMS is not None:
             return
+        j = _load_json_if_present()
+        if j:
+            NORMS = _build_norms_from_json(j)
+            READY = True
+            return
         csv_bytes = _download_csv_bytes()
-        _build_norms_from_csv_bytes(csv_bytes)
+        NORMS = _build_norms_from_csv_bytes(csv_bytes)
         READY = True
 
 def lookup(words:list[str]):
-    """Return (matched_count, profile_list[11])."""
+    """
+    Return (matched_count, profile_list[11]) averaged across matched words.
+    """
     ensure_loaded()
     totals = [0.0]*len(MODALITY_ORDER)
     matched = 0
     for w in words:
         rec = NORMS.get((w or "").lower())
-        if not rec: continue
+        if not rec:
+            continue
         matched += 1
         for i, v in enumerate(rec):
             if v is not None:
                 totals[i] += v
-    profile = [ (totals[i]/matched if matched else 0.0) for i in range(len(MODALITY_ORDER)) ]
+    profile = [(totals[i]/matched if matched else 0.0) for i in range(len(MODALITY_ORDER))]
     return matched, profile
