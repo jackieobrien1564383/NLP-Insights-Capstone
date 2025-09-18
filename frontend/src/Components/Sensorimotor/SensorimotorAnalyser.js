@@ -37,7 +37,7 @@ const SensorimotorAnalyser = ({ words, uploadedPreview, onBack }) => {
       } catch (e) {
         if (!cancelled) {
           setError(
-            "Analysis failed. Check backend URL/CORS and that SM_CSV_URL is set on Render."
+            "Analysis failed. Check backend URL/CORS. Backend should load sm_norms_min.json (via SM_JSON_URL or static file)."
           );
           setStatus("error");
         }
