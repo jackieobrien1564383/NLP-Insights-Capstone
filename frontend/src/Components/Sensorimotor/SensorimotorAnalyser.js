@@ -6,7 +6,7 @@ import {
 
 // Vercel → Settings → Environment Variables
 const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL || "https://<your-render-service>.onrender.com";
+  process.env.REACT_APP_BACKEND_URL || "https://nlp-insights-capstone.onrender.com";
 
 const SensorimotorAnalyser = ({ words, uploadedPreview, onBack }) => {
   const [status, setStatus] = useState("idle"); // idle | loading | error | done
