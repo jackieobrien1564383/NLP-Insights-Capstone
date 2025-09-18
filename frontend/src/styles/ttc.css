@@ -253,3 +253,43 @@ button.ttc-btn,    .ttc-btn {
   margin: 0;
 }
 
+/* --- Shared progress bar (Sentiment + anywhere else) --- */
+.ttc-progress{
+  height: 8px;
+  background: #eef2ff;             /* subtle track */
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.ttc-progress__fill{
+  height: 100%;
+  width: 0%;                        /* set via inline width:% */
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--ttc-grad-start), var(--ttc-grad-end));
+  transition: width 300ms ease;
+}
+
+/* --- Chart titles/captions (optional hooks) --- */
+.ttc-chart-title{ font-weight: 700; color:#0f172a; margin: 16px 0 8px; }
+.ttc-chart-caption{ color:#475569; font-size:.9rem; }
+
+/* --- Sensorimotor charts (SVG hooks) --- */
+.sm-chart .axis path,
+.sm-chart .axis line{ stroke: var(--ttc-border); }
+.sm-chart .axis text{ fill:#475569; font-size:12px; }
+.sm-chart .grid line{ stroke: var(--ttc-border); }
+
+/* Bars (give each <rect> class="bar") */
+.sm-chart .bar{
+  fill: var(--ttc-grad-start);
+  transition: fill .15s ease, opacity .15s ease;
+}
+.sm-chart .bar:hover{ fill: var(--ttc-grad-end); opacity:.9; }
+
+/* Radar (wrap svg with class="sm-radar", polygon class="area") */
+.sm-radar .area{
+  fill: rgba(37,99,235,.16);         /* soft fill related to --ttc-grad-start */
+  stroke: var(--ttc-grad-start);
+  stroke-width: 2;
+}
+.sm-radar .axis text{ fill:#475569; font-size:12px; }
+.sm-radar .grid{ stroke: var(--ttc-border); }
