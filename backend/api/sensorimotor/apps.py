@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 class SensorimotorConfig(AppConfig):
-    name = "sensorimotor"
+    name = "api.sensorimotor"
 
     def ready(self):
         # lazy import to avoid Django startup cycles
