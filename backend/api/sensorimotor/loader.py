@@ -38,38 +38,24 @@ def _canon_mod(x: str|None):
 # ---------- JSON path (preferred) ----------
 
 def _load_json_if_present():
-    """
-    Returns parsed norms object if found (from SM_JSON_URL or local static),
-    otherwise None.
-    """
-    # 1) Remote JSON (optional): e.g., S3/OSF direct link to sm_norms_min.json
+    """Try SM_JSON_URL first, then local static file."""
     url = os.environ.get("SM_JSON_URL")
     if url:
         r = requests.get(url, timeout=60)
         r.raise_for_status()
         return r.json()
-
-    # 2) Local file committed to the repo:
-    #    backend/api/sensorimotor/static/sm_norms_min.json
     local = os.path.join(os.path.dirname(__file__), "static", "sm_norms_min.json")
     if os.path.exists(local):
         with open(local, "r", encoding="utf-8") as f:
             return json.load(f)
-
     return None
 
 def _build_norms_from_json(obj: dict):
-    """
-    obj format: { "word": [11 floats or null], ... }
-    """
+    """obj: { word: [11 floats or null] } → dict[word]->list"""
     norms = {}
-    for w, arr in obj.items():
-        if not isinstance(arr, list):
-            continue
-        # pad/trim to exactly 11
-        fixed = (arr + [None]*11)[:11]
-        if any(v is not None for v in fixed):
-            norms[(w or "").strip().lower()] = fixed
+    for w, arr in (obj or {}).items():
+        if isinstance(arr, list) and any(v is not None for v in arr):
+            norms[(w or "").strip().lower()] = (arr + [None]*11)[:11]
     return norms
 
 # ---------- CSV fallback (only if JSON missing) ----------
@@ -93,8 +79,7 @@ def _download_csv_bytes():
     url = os.environ.get("SM_CSV_URL")
     if not url:
         raise RuntimeError(
-            "No JSON found. Set SM_JSON_URL or commit static/sm_norms_min.json; "
-            "otherwise set SM_CSV_URL to the Lancaster CSV URL."
+            "No JSON found (SM_JSON_URL or static/sm_norms_min.json) and SM_CSV_URL is not set."
         )
     r = requests.get(url, timeout=90)
     r.raise_for_status()
@@ -154,9 +139,6 @@ def _build_norms_from_csv_bytes(b: bytes):
 # ---------- Public API used by your views ----------
 
 def warm_start():
-    """
-    Background load at boot. Prefers JSON; falls back to CSV only if needed.
-    """
     def _job():
         global READY, NORMS
         try:
@@ -166,9 +148,9 @@ def warm_start():
                 READY = True
                 print("[sensorimotor] Loaded norms from JSON.", flush=True)
                 return
-            # JSON not found — try CSV
+            # Fallback: CSV via SM_CSV_URL (only if you want it)
             csv_bytes = _download_csv_bytes()
-            NORMS = _build_norms_from_csv_bytes(csv_bytes)
+            _build_norms_from_csv_bytes(csv_bytes)
             READY = True
             print("[sensorimotor] Loaded norms from CSV.", flush=True)
         except Exception as e:
@@ -176,9 +158,6 @@ def warm_start():
     threading.Thread(target=_job, daemon=True).start()
 
 def ensure_loaded():
-    """
-    Synchronous, on-demand load (same preference: JSON first).
-    """
     global READY, NORMS
     if READY and NORMS is not None:
         return
@@ -190,8 +169,9 @@ def ensure_loaded():
             NORMS = _build_norms_from_json(j)
             READY = True
             return
+        # Fallback: CSV only if JSON wasn’t found
         csv_bytes = _download_csv_bytes()
-        NORMS = _build_norms_from_csv_bytes(csv_bytes)
+        _build_norms_from_csv_bytes(csv_bytes)
         READY = True
 
 def lookup(words:list[str]):
