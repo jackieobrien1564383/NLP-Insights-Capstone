@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import TextInputSection from "../TextInputSection";
 import ClusteringAnalyser from "./ClusteringAnalyser";
-// import "./ClusteringLanding.css";
+import "./ClusteringLanding.css";
 
 const ClusteringLanding = ({ onBack }) => {
   const [pastedText, setPastedText] = useState("");
@@ -10,22 +10,7 @@ const ClusteringLanding = ({ onBack }) => {
   const [activeInput, setActiveInput] = useState("");
   const [error, setError] = useState("");
   const [analysisStarted, setAnalysisStarted] = useState(false);
-  const [corpusPreview, setCorpusPreview] = useState("");
   const [pastedWordCount, setPastedWordCount] = useState(0);
-
-  useEffect(() => {
-    const fetchCorpusPreview = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/corpus-preview/");
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        setCorpusPreview(data.preview.split("\n").slice(0, 4).join("\n"));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchCorpusPreview();
-  }, []);
 
   const handleTextPaste = (e) => {
     const text = e.target.value;
@@ -58,40 +43,59 @@ const ClusteringLanding = ({ onBack }) => {
       <ClusteringAnalyser
         uploadedText={uploadedText}
         uploadedPreview={uploadedPreview}
-        corpusPreview={corpusPreview}
         onBack={() => setAnalysisStarted(false)}
       />
     );
   }
 
   return (
-    <div className="analysis-container">
-      {/* header row: back + title on the same line */}
-      <div className="analysis-header">
-        <button onClick={onBack} className="ttc-button ttc-button-sm">← Back</button>
-        <h1 className="analysis-title">Clustering Analysis</h1>
+    <div className="Clustering-landing-wrapper">
+      <button
+        onClick={onBack}
+        className="Clustering-back-button"
+      >
+        ← Back
+      </button>
+
+      <div className="Clustering-header">
+        <h1 className="Clustering-title">Clustering Analysis</h1>
+        <p className="Clustering-subtitle">
+          See how your words naturally group together into clusters, highlighting the themes, styles, and repeated ideas that shape your writing.
+        </p>
       </div>
 
-      {/* wrap main content so spacing rules can target it */}
-      <div className="analysis-main">
-        <TextInputSection
-          pastedText={pastedText}
-          handleTextPaste={handleTextPaste}
-          pastedWordCount={pastedWordCount}
-          uploadedPreview={uploadedPreview}
-          corpusPreview={corpusPreview}
-          error={error}
-          onFilesUploaded={handleFilesUploaded}
-        />
-      </div>
+      <div className="Clustering-container">
+        <div className="Clustering-content-card">
+          <TextInputSection
+            pastedText={pastedText}
+            handleTextPaste={handleTextPaste}
+            pastedWordCount={pastedWordCount}
+            uploadedPreview={uploadedPreview}
+            error={error}
+            onFilesUploaded={handleFilesUploaded}
+          />
 
-      <div className="analysis-actions">
-        <button onClick={handleContinue} className="ttc-button ttc-button-lg">
-            Continue to Analysis →
-        </button>
+          {error && (
+            <div className="Clustering-error-message">
+              {error}
+            </div>
+          )}
+
+          <div className="Clustering-continue-section">
+            <button
+              onClick={handleContinue}
+              className="Clustering-continue-button"
+              disabled={!uploadedText.trim()}
+            >
+              Continue to Analysis →
+            </button>
+          </div>
+        </div>
       </div>
-  </div>
- );
+    </div>
+  );
 };
 
 export default ClusteringLanding;
+
+

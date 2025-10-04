@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { CheckCircle, AlertCircle, Upload, X } from "lucide-react";
 import "./Keyness/KeynessLanding.css";
 
@@ -9,7 +9,10 @@ const TextInputSection = ({
   uploadedPreview,
   corpusPreview,
   error,
-  onFilesUploaded
+  onFilesUploaded,
+  comparisonMode = "corpus",
+  referenceTextId = null,
+  referenceTextName = null,
 }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [hover, setHover] = useState(false);
@@ -21,135 +24,175 @@ const TextInputSection = ({
   const [draggedFileName, setDraggedFileName] = useState("");
   const dropzoneRef = useRef(null);
 
-  // Upload files to Django backend with progress
-const uploadFilesToBackend = async (files) => {
-  setUploading(true);
-  setUploadErrors([]);
-  setUploadSuccess([]);
-  setUploadProgress(0);
-
-  console.log("Files to upload:", files);
-
-  const formData = new FormData();
-  files.forEach((file) => formData.append("files", file));
-
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://localhost:8000/api/upload-files/", true);
-    xhr.withCredentials = true;
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        setUploadProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    };
-
-    xhr.onload = () => {
-      try {
-        resolve(JSON.parse(xhr.responseText));
-      } catch (e) {
-        setUploadErrors(["Invalid server response"]);
-        resolve(null);
-      }
-    };
-
-    xhr.onerror = () => {
-      setUploadErrors(["Network error"]);
-      resolve(null);
-    };
-
-    xhr.send(formData);
-  }).then((result) => {
-    setUploading(false);
-
-    if (!result) return;
-
-    if (result.success && result.files.length > 0) {
-  const combinedText = result.files
-    .map((file) => file.text_content)
-    .join("\n\n--- Next File ---\n\n");
-
-  onFilesUploaded && onFilesUploaded(combinedText, result.files); 
-
-  setUploadSuccess(
-    result.files.map((file) => {
-      return `✓ ${file.filename} uploaded successfully (${file.word_count} words)`;
-    })
-  );
-
-  setSelectedFiles(
-    result.files.map((file) => ({
-      name: file.filename,          
-      processed: true,
-      wordCount: file.word_count,
-      charCount: file.char_count,
-      textContent: file.text_content 
-    }))
-  );
-}
-
-
-    if (result.errors?.length > 0) setUploadErrors(result.errors);
-    if (!result.success) setUploadErrors([result.error || "Upload failed"]);
-    setUploadProgress(0);
-  });
-};
-
-
-
-
-  // Handle files
-  const handleFiles = (files) => {
-    console.log("handleFiles called with:", files);
-Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
-
-    const fileArray = Array.from(files);
-
-    // Deduplicate by name + size
-    const existing = new Set(selectedFiles.map((f) => `${f.name}-${f.size}`));
-    const newFiles = fileArray.filter(
-      (f) => !existing.has(`${f.name}-${f.size}`)
-    );
-
-    if (newFiles.length < fileArray.length) {
-      setUploadErrors(["Some duplicate files were skipped"]);
-    }
-
-    if (newFiles.length === 0) return;
-
-    if (newFiles.length > 5) {
-      setUploadErrors(["Maximum 5 files allowed"]);
+  const uploadUserTextFiles = async (files) => {
+    if (files.length !== 2) {
+      setUploadErrors(["Please select exactly two files."]);
       return;
     }
 
-    const oversizedFiles = newFiles.filter((file) => file.size > 5 * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      setUploadErrors([
-        `Files too large: ${oversizedFiles.map((f) => f.name).join(", ")}`,
-      ]);
-      return;
-    }
-
-    const invalidTypes = newFiles.filter(
-      (file) => !file.name.toLowerCase().match(/\.(txt|doc|docx)$/)
-    );
-    if (invalidTypes.length > 0) {
-      setUploadErrors([
-        `Invalid file types: ${invalidTypes.map((f) => f.name).join(", ")}`,
-      ]);
-      return;
-    }
-
+    setUploading(true);
     setUploadErrors([]);
     setUploadSuccess([]);
-    uploadFilesToBackend(newFiles);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append("target_file", files[0]);
+    formData.append("reference_file", files[1]);
+    formData.append("comparison_mode", "user_text");
+
+    try {
+      const res = await fetch("http://localhost:8000/api/upload-files/", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setUploadErrors([data.error || "Upload failed"]);
+        return;
+      }
+
+      const updatedFiles = [
+        {
+          name: data.target_file.filename,
+          size: data.target_file.file_size,
+          wordCount: data.target_file.word_count,
+          textContent: data.target_file.text_content,
+          processed: true,
+        },
+        {
+          name: data.reference_file.filename,
+          size: data.reference_file.file_size,
+          wordCount: data.reference_file.word_count,
+          textContent: data.reference_file.text_content,
+          processed: true,
+        },
+      ];
+
+      setSelectedFiles(updatedFiles);
+      setUploadSuccess([
+        `✓ Target: ${updatedFiles[0].name} (${updatedFiles[0].wordCount} words)`,
+        `✓ Reference: ${updatedFiles[1].name} (${updatedFiles[1].wordCount} words)`,
+      ]);
+
+      onFilesUploaded &&
+        onFilesUploaded(
+          updatedFiles.map((f) => f.textContent).join("\n\n--- Next File ---\n\n"),
+          updatedFiles
+        );
+    } catch (err) {
+      setUploadErrors([err.message || "Network error"]);
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
   };
 
-  // Remove a selected file
-  const removeFile = (indexToRemove) => {
-    const newFiles = selectedFiles.filter((_, index) => index !== indexToRemove);
-    setSelectedFiles(newFiles);
+  // Handle files (user_text or corpus)
+  const handleFiles = (files) => {
+    const fileArray = Array.from(files);
 
+    if (comparisonMode === "user_text") {
+      const newFiles = [...selectedFiles, ...fileArray];
+
+      if (newFiles.length > 2) {
+        setUploadErrors(["Please select exactly two files (target + reference)."]);
+        return;
+      }
+
+      // Validate types & size
+      const oversized = newFiles.filter((f) => f.size > 5 * 1024 * 1024);
+      if (oversized.length > 0) {
+        setUploadErrors([
+          `Files too large (max 5MB): ${oversized.map((f) => f.name).join(", ")}`,
+        ]);
+        return;
+      }
+
+      const invalidTypes = newFiles.filter(
+        (f) => !f.name.toLowerCase().match(/\.(txt|doc|docx)$/)
+      );
+      if (invalidTypes.length > 0) {
+        setUploadErrors([
+          `Invalid file types: ${invalidTypes.map((f) => f.name).join(", ")}`,
+        ]);
+        return;
+      }
+
+      setSelectedFiles(newFiles);
+      setUploadErrors([]);
+      setUploadSuccess([]);
+
+      if (newFiles.length === 2) {
+        uploadUserTextFiles(newFiles);
+      }
+      return;
+    }
+
+    // Corpus mode
+    const existing = new Set(selectedFiles.map((f) => `${f.name}-${f.size}`));
+    const newCorpusFiles = fileArray.filter((f) => !existing.has(`${f.name}-${f.size}`));
+    if (newCorpusFiles.length === 0) return;
+
+    setSelectedFiles([...selectedFiles, ...newCorpusFiles]);
+    uploadCorpusFiles(newCorpusFiles);
+  };
+
+  const uploadCorpusFiles = async (files) => {
+    setUploading(true);
+    setUploadErrors([]);
+    setUploadSuccess([]);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    files.forEach((f) => formData.append("files", f));
+
+    try {
+      const res = await fetch("http://localhost:8000/api/upload-files/", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setUploadErrors([data.error || "Upload failed"]);
+        return;
+      }
+
+      const uploadedFiles = data.files.map((f) => ({
+        name: f.filename,
+        size: f.file_size || f.size,
+        wordCount: f.word_count,
+        textContent: f.text_content,
+        processed: true,
+      }));
+
+      setSelectedFiles(uploadedFiles);
+      setUploadSuccess(
+        uploadedFiles.map(
+          (f, i) => `✓ ${i + 1}: ${f.name} (${f.wordCount} words)`
+        )
+      );
+
+      onFilesUploaded &&
+        onFilesUploaded(
+          uploadedFiles.map((f) => f.textContent).join("\n\n--- Next File ---\n\n"),
+          uploadedFiles
+        );
+    } catch (err) {
+      setUploadErrors([err.message || "Network error"]);
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Remove / clear files
+  const removeFile = (index) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
     if (newFiles.length === 0) {
       onFilesUploaded && onFilesUploaded("", []);
       setUploadSuccess([]);
@@ -157,7 +200,6 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
     }
   };
 
-  // Clear all files
   const clearAllFiles = () => {
     setSelectedFiles([]);
     setUploadSuccess([]);
@@ -165,7 +207,7 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
     onFilesUploaded && onFilesUploaded("", []);
   };
 
-  // Drag events
+  // Drag & drop handlers
   const handleDragEnter = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -175,7 +217,6 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
       setDraggedFileName(e.dataTransfer.items[0].getAsFile()?.name || "");
     }
   };
-
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -188,13 +229,11 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
       return newCounter;
     });
   };
-
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "copy";
   };
-
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -202,152 +241,102 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
     setDragCounter(0);
     setDraggedFileName("");
 
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      handleFiles(files);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
     }
   };
-
   const handleFileSelect = (e) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFiles(files);
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files);
     }
     e.target.value = "";
   };
 
-  // Global drag handlers
-  React.useEffect(() => {
+  useEffect(() => {
     const handleGlobalDrop = (e) => {
       if (!dropzoneRef.current?.contains(e.target)) {
         e.preventDefault();
         e.stopPropagation();
       }
     };
-
     const handleGlobalDragOver = (e) => {
       if (!dropzoneRef.current?.contains(e.target)) {
         e.preventDefault();
       }
     };
-
     document.addEventListener("dragover", handleGlobalDragOver, false);
     document.addEventListener("drop", handleGlobalDrop, false);
-
     return () => {
       document.removeEventListener("dragover", handleGlobalDragOver, false);
       document.removeEventListener("drop", handleGlobalDrop, false);
     };
   }, []);
 
+  const getComparisonLabel = () => {
+    if (comparisonMode === "user_text") {
+      return referenceTextName
+        ? `Comparing against: ${referenceTextName}`
+        : "Comparing against your selected text";
+    }
+    return null;
+  };
+
   return (
-    <div className="keyness-container">
+    <div className="text-input-container">
       {/* Paste textarea */}
-      <div>
-        <label className="block text-lg font-semibold mb-2">
-          Paste Your Text
-        </label>
+      <div className="paste-section">
+        <label className="input-label">Paste Your Text</label>
         <textarea
           value={pastedText}
           onChange={handleTextPaste}
           className="keyness-textarea"
-          placeholder="Paste text here..."
-          style={{
-            width: "100%",
-            minHeight: "120px",
-            padding: "12px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-            fontSize: "14px",
-            fontFamily: "monospace",
-            resize: "vertical",
-          }}
+          placeholder="Paste your text here..."
         />
-        {pastedText && (
-          <div
-            style={{ fontSize: "0.9em", color: "#666", marginTop: "6px" }}
-          >
-            Word count: {pastedWordCount}
-          </div>
-        )}
+        {pastedText && <div className="word-count">Word count: {pastedWordCount}</div>}
       </div>
 
-      {/* Drag & Drop */}
+      {/* Drag & drop upload */}
       <div
         ref={dropzoneRef}
-        className={`keyness-dropzone ${hover ? "hover" : ""} ${
-          uploading ? "uploading" : ""
-        }`}
+        className={`keyness-dropzone ${hover ? "hover" : ""} ${uploading ? "uploading" : ""
+          }`}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        style={{
-          width: "100%",
-          border: uploading ? "2px solid #007bff" : "2px dashed #ccc",
-          padding: "40px 20px",
-          textAlign: "center",
-          borderRadius: "8px",
-          backgroundColor: uploading
-            ? "#f0f8ff"
-            : hover
-            ? "#f0f8ff"
-            : "transparent",
-          borderColor: uploading ? "#007bff" : hover ? "#007bff" : "#ccc",
-          transition: "all 0.3s ease",
-          opacity: uploading ? 0.7 : 1,
-        }}
       >
-        <div style={{ pointerEvents: "none" }}>
+        <div className="dropzone-content">
           {uploading ? (
-            <div>
-              <Upload className="animate-pulse mx-auto mb-2" size={24} />
-              Uploading… {uploadProgress}%
-              <div
-                style={{
-                  width: "100%",
-                  height: "6px",
-                  background: "#eee",
-                  marginTop: "8px",
-                  borderRadius: "3px",
-                  overflow: "hidden",
-                }}
-              >
+            <div className="upload-progress">
+              <Upload className="upload-icon" size={24} />
+              <div>Uploading… {uploadProgress}%</div>
+              <div className="progress-bar">
                 <div
-                  style={{
-                    width: `${uploadProgress}%`,
-                    height: "100%",
-                    background: "#007bff",
-                    transition: "width 0.2s",
-                  }}
+                  className="progress-fill"
+                  style={{ width: `${uploadProgress}%` }}
                 />
               </div>
             </div>
           ) : (
-            <>
-              Drag & drop files here
+            <div className="dropzone-idle">
+              <Upload className="upload-icon" size={32} />
+              <div className="dropzone-text">Drag & drop files here</div>
               {hover && draggedFileName && (
-                <div style={{ marginTop: "8px", color: "#333" }}>
+                <div className="drag-feedback">
                   Release to upload: <strong>{draggedFileName}</strong>
                 </div>
               )}
-              <div
-                style={{
-                  fontSize: "0.9em",
-                  color: "#666",
-                  marginTop: "8px",
-                }}
-              >
-                Supported: .txt, .doc, .docx (max 5MB each)
+              <div className="file-info">
+                Supported: .txt, .doc, .docx (max 5MB each). Max 5 files.
               </div>
-            </>
+            </div>
           )}
         </div>
         <input
           id="fileInput"
           type="file"
           multiple
-          style={{ display: "none" }}
+          className="hidden-file-input"
           onChange={handleFileSelect}
           accept=".txt,.doc,.docx"
           disabled={uploading}
@@ -355,258 +344,134 @@ Array.from(files).forEach(f => console.log(f.name, f.size, f.type));
       </div>
 
       {/* Select Files Button */}
-      <button
-        type="button"
-        onClick={() => !uploading && document.getElementById("fileInput")?.click()}
-        className="ttc-button-wide ttc-button ttc-button-lg"
-        disabled={uploading}
-        aria-busy={uploading}
-      >
-        📎 {uploading ? "Uploading…" : "Select Files"}
-      </button>
-
-      {/* Upload Success Messages */}
-      {uploadSuccess.length > 0 && (
-        <div
-          style={{
-            backgroundColor: "#d1f2eb",
-            border: "1px solid #52c41a",
-            borderRadius: "6px",
-            padding: "12px",
-            marginTop: "12px",
-          }}
+      <div className="select-button-container">
+        <button
+          type="button"
+          onClick={() => !uploading && document.getElementById("fileInput").click()}
+          className="select-files-button"
+          disabled={uploading}
         >
-          {uploadSuccess.map((message, index) => (
-            <div
-              key={index}
-              style={{ color: "#389e0d", marginBottom: "4px" }}
-            >
-              {message}
-            </div>
-          ))}
-        </div>
-      )}
+          Select Files from Computer
+        </button>
+      </div>
 
-      {/* Upload Error Messages */}
-      {uploadErrors.length > 0 && (
-        <div
-          style={{
-            backgroundColor: "#fff2f0",
-            border: "1px solid #ff4d4f",
-            borderRadius: "6px",
-            padding: "12px",
-            marginTop: "12px",
-          }}
-        >
-          {uploadErrors.map((error, index) => (
-            <div
-              key={index}
-              style={{ color: "#cf1322", marginBottom: "4px" }}
-            >
-              <AlertCircle
-                size={16}
-                style={{ display: "inline", marginRight: "6px" }}
-              />
-              {error}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Selected files */}
+      {/* Selected files section */}
       {selectedFiles.length > 0 && (
-        <div
-          className="keyness-file-list"
-          style={{
-            width: "100%",
-            padding: "16px",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "6px",
-            border: "1px solid #e9ecef",
-            marginTop: "12px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "12px",
-            }}
-          >
-            <h4 style={{ margin: 0, color: "#495057" }}>Selected Files:</h4>
-            <button
-              onClick={clearAllFiles}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#6c757d",
-                cursor: "pointer",
-                fontSize: "0.9em",
-              }}
-            >
+        <div className="selected-files-section">
+          <div className="files-header">
+            <h4>Selected Files:</h4>
+            <button onClick={clearAllFiles} className="clear-all-button">
               Clear All
             </button>
           </div>
-          {selectedFiles.map((file, index) => (
-            <div
-              key={`${file.name}-${index}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "8px 0",
-                borderBottom:
-                  index < selectedFiles.length - 1
-                    ? "1px solid #dee2e6"
-                    : "none",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <CheckCircle
-                  size={16}
-                  style={{ marginRight: "8px", color: "green" }}
-                />
-                <span>
-                  {file.name} ({Math.round(file.size / 1024)}KB)
-                  {file.processed && file.wordCount && (
-                    <span
-                      style={{
-                        color: "#6c757d",
-                        fontSize: "0.9em",
-                      }}
-                    >
-                      {" "}
-                      • {file.wordCount} words
-                    </span>
-                  )}
-                </span>
+          <div className="files-list">
+            {selectedFiles.map((file, index) => (
+              <div key={`${file.name}-${index}`} className="file-item">
+                <div className="file-info-row">
+                  <CheckCircle size={16} className="file-check" />
+                  <span className="file-details">
+                    {file.name} ({Math.round(file.size / 1024)}KB)
+                    {file.wordCount && (
+                      <span className="word-count-info"> • {file.wordCount} words</span>
+                    )}
+                  </span>
+                </div>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="remove-file-button"
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <button
-                onClick={() => removeFile(index)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#dc3545",
-                  cursor: "pointer",
-                  padding: "4px",
-                }}
-              >
-                <X size={16} />
-              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Uploaded Text Preview */}
+      {comparisonMode === "user_text" && selectedFiles.length > 1 && (
+        <div className="preview-box">
+          <h3 className="preview-title">Uploaded Text Preview:</h3>
+          <div className="preview-content">
+            {selectedFiles.slice(1).map((file, index) => {
+              const previewText = file.textContent
+                ? file.textContent.split("\n").slice(0, 4).join("\n")
+                : "";
+              return (
+                <div key={index} className="file-preview">
+                  <strong>{file.name}</strong>
+                  {"\n"}
+                  {previewText}
+                  {index < selectedFiles.slice(1).length - 1 && "\n---\n"}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {comparisonMode === "corpus" && selectedFiles.length > 0 && (
+        <div className="preview-box">
+          <h3 className="preview-title">Uploaded Text Preview:</h3>
+          <div className="preview-content">
+            {selectedFiles.map((file, index) => {
+              const previewText = file.textContent
+                ? file.textContent.split("\n").slice(0, 4).join("\n")
+                : "";
+              return (
+                <div key={index} className="file-preview">
+                  <strong>{file.name}</strong>
+                  {"\n"}
+                  {previewText}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Corpus / Reference Preview */}
+      {corpusPreview && (
+        <div className="preview-box">
+          <h3 className="preview-title">
+            {comparisonMode === "user_text" ? "Reference Text Preview:" : "Corpus Preview:"}
+          </h3>
+          <div className="preview-content">{corpusPreview}</div>
+        </div>
+      )}
+
+      {/* Success messages */}
+      {uploadSuccess.length > 0 && (
+        <div className="success-messages">
+          {uploadSuccess.map((msg, i) => (
+            <div key={i} className="success-item">
+              <CheckCircle size={16} />
+              {msg}
             </div>
           ))}
         </div>
       )}
 
-{/* Uploaded Preview */}
-{selectedFiles.length > 0 && (
-  <div
-    className="keyness-preview"
-    style={{
-      width: "100%",
-      padding: "16px",
-      backgroundColor: "#f8f9fa",
-      borderRadius: "6px",
-      border: "1px solid #e9ecef",
-      marginTop: "12px",
-    }}
-  >
-    <h3
-      className="font-semibold mb-2"
-      style={{ marginBottom: "12px", color: "#495057" }}
-    >
-      Uploaded Text Preview:
-    </h3>
-    <pre
-      style={{
-        whiteSpace: "pre-wrap",
-        maxHeight: "200px",   // keeps box scrollable
-        overflowY: "auto",
-        backgroundColor: "#ffffff",
-        padding: "12px",
-        borderRadius: "4px",
-        border: "1px solid #dee2e6",
-        fontSize: "13px",
-        fontFamily: "monospace",
-        margin: 0,
-      }}
-    >
-      {selectedFiles.map((file, index) => {
-        const previewText = file.textContent
-          ? file.textContent.split("\n").slice(0, 4).join("\n") // first 4 lines
-          : "";
-
-        return (
-          <div key={index} style={{ marginBottom: "1em" }}>
-            <strong>{file.name}</strong>
-            {"\n"}
-            {previewText}
-            {"\n---\n"}
-          </div>
-        );
-      })}
-    </pre>
-  </div>
-)}
-
-
-
-
-
-      {/* Corpus Preview */}
-      {corpusPreview && (
-        <div
-          className="keyness-corpus-preview"
-          style={{
-            width: "100%",
-            padding: "16px",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "6px",
-            border: "1px solid #e9ecef",
-            marginTop: "12px",
-          }}
-        >
-          <h3
-            className="font-semibold mb-2"
-            style={{ marginBottom: "12px", color: "#495057" }}
-          >
-            Corpus Preview:
-          </h3>
-          <pre
-            style={{
-              whiteSpace: "pre-wrap",
-              backgroundColor: "#ffffff",
-              padding: "12px",
-              borderRadius: "4px",
-              border: "1px solid #dee2e6",
-              fontSize: "13px",
-              fontFamily: "monospace",
-              margin: 0,
-            }}
-          >
-            {corpusPreview}
-          </pre>
+      {/* Error messages */}
+      {uploadErrors.length > 0 && (
+        <div className="error-messages">
+          {uploadErrors.map((err, i) => (
+            <div key={i} className="error-item">
+              <AlertCircle size={16} />
+              {err}
+            </div>
+          ))}
         </div>
       )}
 
       {/* General error */}
       {error && (
-        <div
-          className="keyness-error"
-          style={{
-            width: "100%",
-            color: "#dc3545",
-            padding: "12px",
-            backgroundColor: "#f8d7da",
-            border: "1px solid #f5c6cb",
-            borderRadius: "6px",
-            marginTop: "12px",
-          }}
-        >
+        <div className="general-error">
+          <AlertCircle size={16} />
           {error}
         </div>
       )}
+
     </div>
   );
 };

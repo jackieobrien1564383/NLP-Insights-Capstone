@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+
+# Environment
+env/
+venv/
+NLP-Insights-Capstone-env-312/
+
+# ConceptNet embeddings/data folder
+backend/backend/data/*
+backend/data/*
+backend/models/numberbatch-en.txt
+numberbatch-en-19.08.txt.gz
+
+# Temporary user text corpus files
+backend/api/corpus_meta_keyness/temp_*.json
+
+# VSCode
+.vscode/
+
+# Node / frontend
+node_modules/
+dist/
+build/
+# Ignore local database
+backend/db.sqlite3

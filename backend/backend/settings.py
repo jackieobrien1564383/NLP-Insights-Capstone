@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import nltk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,17 +20,76 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+
+# === HTTPS, CORS/CSRF, Sessions, and Logging (consolidated) ===
+import os
+
+# Toggle via env: DJANGO_DEBUG=1 for local dev
+DEBUG = os.environ.get("DJANGO_DEBUG", "") == "1"
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "your.production.domain"]
+
+# HTTPS and cookies
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# HSTS (only when not in DEBUG)
+SECURE_HSTS_SECONDS = 63072000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# CSRF/CORS
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://your.production.domain",
+]
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://your.production.domain",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# Conservative logging: no request bodies / file contents
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {"format": "%(levelname)s %(name)s: %(message)s"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "simple"},
+    },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO"},
+        "django.server": {"handlers": ["console"], "level": "INFO"},
+        # your app logger(s) — rename 'api' to your actual module path if needed
+        "api": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-@!dq1k%%v2-1v2hr_w_tev7e&xjlet1a=e4%*8kijxpj$6yi%('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    "localhost", "127.0.0.1",
-    ".onrender.com",              # allows the Render domain
-    "nlp-insights-capstone.onrender.com", 
-]
+ALLOWED_HOSTS = []
+
+try:
+    nltk.data.find("taggers/averaged_perceptron_tagger_eng")
+except LookupError:
+    nltk.download("averaged_perceptron_tagger_eng")
 
 # Application definition
 
@@ -129,11 +189,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://*.onrender.com",     # Render backend
-    "https://nlp-insights-capstone.onrender.com",
-    "https://nlp-insights-capstone.vercel.app",
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -141,17 +198,8 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://nlp-insights-capstone.vercel.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
-
-# Requests behind Render’s proxy should be considered HTTPS
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-# ------------ STATIC (optional but good) ------------
-STATIC_URL = "static/"
-
-STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Session configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database sessions
@@ -160,7 +208,19 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True  # Set to True in production with HTTPS
 SESSION_SAVE_EVERY_REQUEST = True  # Update session on every request
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-# To facilitate cookies across origins (e.g., Vercel app embedded in Figma)
-SESSION_COOKIE_SAMESITE = "None" 
-CSRF_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_SECURE = True   
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'your_app_name': {  # Replace with your actual app name
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
