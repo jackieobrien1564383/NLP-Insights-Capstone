@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os                     # added for Render
 import nltk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,12 +23,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # === HTTPS, CORS/CSRF, Sessions, and Logging (consolidated) ===
-import os
 
-# Toggle via env: DJANGO_DEBUG=1 for local dev
+
+# --- Debug toggle -----------------------------------------------------------
+# Never run with DEBUG=True in production.
+# Local dev: set DJANGO_DEBUG=1 (in your shell or .env).
+# Render: leave DJANGO_DEBUG unset (or set to 0) so DEBUG=False.
 DEBUG = os.environ.get("DJANGO_DEBUG", "") == "1"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "your.production.domain"]
+# --- Hosts (backend origin) ------------------------------------------------
+# Allow localhost for dev and the Render hostname in prod.
+# Render usually provides RENDER_EXTERNAL_HOSTNAME.
+RENDER_HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+if RENDER_HOST:
+    ALLOWED_HOSTS.append(RENDER_HOST)
+else:
+    # fallback if env var isn't present yet
+    ALLOWED_HOSTS.append("nlp-insights-capstone.onrender.com")
+
+# Frontend origin (Vercel) for CORS/CSRF
+FRONTEND_ORIGIN = os.environ.get(
+    "FRONTEND_ORIGIN",
+    "https://nlp-insights-capstone.vercel.app",
+)
 
 # HTTPS and cookies
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -50,13 +69,15 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://your.production.domain",
-]
+    FRONTEND_ORIGIN,
+] + ([f"https://{RENDER_HOST}"] if RENDER_HOST else ["https://nlp-insights-capstone.onrender.com"])
+
 CORS_ALLOW_ALL_ORIGINS = False
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://your.production.domain",
+    FRONTEND_ORIGIN,
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -108,6 +129,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -181,7 +203,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
