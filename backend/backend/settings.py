@@ -70,7 +70,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     FRONTEND_ORIGIN,
-] + ([f"https://{RENDER_HOST}"] if RENDER_HOST else ["https://nlp-insights-capstone.onrender.com"])
+] + ([f"https://{RENDER_HOST}"] if RENDER_HOST else ["https://nlp-insights-capstone-ljvw.onrender.com"])
 
 CORS_ALLOW_ALL_ORIGINS = False
 
