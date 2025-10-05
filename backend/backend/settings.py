@@ -35,12 +35,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "") == "1"
 # Allow localhost for dev and the Render hostname in prod.
 # Render usually provides RENDER_EXTERNAL_HOSTNAME.
 RENDER_HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-if RENDER_HOST:
-    ALLOWED_HOSTS.append(RENDER_HOST)
-else:
-    # fallback if env var isn't present yet
-    ALLOWED_HOSTS.append("nlp-insights-capstone-ljvw.onrender.com")
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
 
 # Frontend origin (Vercel) for CORS/CSRF
 FRONTEND_ORIGIN = os.environ.get(
@@ -70,7 +65,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     FRONTEND_ORIGIN,
-] + ([f"https://{RENDER_HOST}"] if RENDER_HOST else ["https://nlp-insights-capstone-ljvw.onrender.com"])
+    "https://*.onrender.com",
+]
 
 CORS_ALLOW_ALL_ORIGINS = False
 
@@ -122,9 +118,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -200,46 +196,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = { ##WhiteNoise on Django 5 — prefer STORAGES over STATICFILES_STORAGE
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-]
-
-CORS_ALLOW_ALL_ORIGINS = False
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-CORS_ALLOW_CREDENTIALS = True
-
-# Session configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database sessions
-SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True  # Set to True in production with HTTPS
-SESSION_SAVE_EVERY_REQUEST = True  # Update session on every request
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'your_app_name': {  # Replace with your actual app name
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-    },
-}
