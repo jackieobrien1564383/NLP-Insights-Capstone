@@ -102,11 +102,6 @@ LOGGING = {
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-@!dq1k%%v2-1v2hr_w_tev7e&xjlet1a=e4%*8kijxpj$6yi%('
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
 try:
     nltk.data.find("taggers/averaged_perceptron_tagger_eng")
 except LookupError:
