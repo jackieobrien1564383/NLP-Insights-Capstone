@@ -40,7 +40,7 @@ if RENDER_HOST:
     ALLOWED_HOSTS.append(RENDER_HOST)
 else:
     # fallback if env var isn't present yet
-    ALLOWED_HOSTS.append("nlp-insights-capstone.onrender.com")
+    ALLOWED_HOSTS.append("nlp-insights-capstone-ljvw.onrender.com")
 
 # Frontend origin (Vercel) for CORS/CSRF
 FRONTEND_ORIGIN = os.environ.get(
