@@ -24,7 +24,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # === HTTPS, CORS/CSRF, Sessions, and Logging (consolidated) ===
 
-
 # --- Debug toggle -----------------------------------------------------------
 # Never run with DEBUG=True in production.
 # Local dev: set DJANGO_DEBUG=1 (in your shell or .env).
@@ -35,7 +34,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "") == "1"
 # Allow localhost for dev and the Render hostname in prod.
 # Render usually provides RENDER_EXTERNAL_HOSTNAME.
 RENDER_HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # Frontend origin (Vercel) for CORS/CSRF
 FRONTEND_ORIGIN = os.environ.get(
