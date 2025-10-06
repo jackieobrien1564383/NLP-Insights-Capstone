@@ -151,8 +151,8 @@ const TextInputSection = ({
 
       setSelectedFiles(updatedFiles);
       setUploadSuccess([
-        `Target: ${updatedFiles[0].name} (${updatedFiles[0].wordCount} words)`,
-        `Reference: ${updatedFiles[1].name} (${updatedFiles[1].wordCount} words)`,
+        `Successfully Uploaded Target File: ${updatedFiles[0].name} (${updatedFiles[0].wordCount} words)`,
+        `Successfully Uploaded Reference File: ${updatedFiles[1].name} (${updatedFiles[1].wordCount} words)`,
       ]);
       setUploadErrors([]); // Clear previous error messages
 
