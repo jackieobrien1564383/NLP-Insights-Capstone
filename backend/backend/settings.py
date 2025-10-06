@@ -34,7 +34,9 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "") == "1"
 # Allow localhost for dev and the Render hostname in prod.
 # Render usually provides RENDER_EXTERNAL_HOSTNAME.
 RENDER_HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
+if RENDER_HOST:
+    ALLOWED_HOSTS.append(RENDER_HOST)
 
 # Frontend origin (Vercel) for CORS/CSRF
 FRONTEND_ORIGIN = os.environ.get(
@@ -64,8 +66,10 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     FRONTEND_ORIGIN,
-    "https://*.onrender.com",
-]
+    "https://*.vercel.app", 
+    ]
+if RENDER_HOST:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_HOST}")
 
 CORS_ALLOW_ALL_ORIGINS = False
 
@@ -74,6 +78,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     FRONTEND_ORIGIN,
 ]
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.vercel\.app$"]
 CORS_ALLOW_CREDENTIALS = True
 
 # Conservative logging: no request bodies / file contents
@@ -117,9 +122,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
