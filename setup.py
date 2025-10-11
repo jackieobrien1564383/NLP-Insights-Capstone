@@ -74,7 +74,7 @@ def create_venv(project_dir):
     return venv, py_in_venv(venv)
 
 def install_backend(py, project_dir, use_lock):
-    req = project_dir / ("requirements-lock.txt" if use_lock else "requirements.txt")
+    req = project_dir / ("backend/backend/requirements-lock.txt" if use_lock else "backend/backend/requirements.txt")
     print(f"Installing backend deps from {req.name} …")
     run([str(py), "-m", "pip", "install", "--upgrade", "pip", "wheel", "setuptools"])
     run([str(py), "-m", "pip", "install", "-r", str(req)])
