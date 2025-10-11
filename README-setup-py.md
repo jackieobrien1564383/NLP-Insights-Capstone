@@ -9,7 +9,7 @@ Run one of:
     python setup.py
 
 This will clone the repo into ./NLP-Insights-Capstone, create a venv, install deps, download spaCy models, run migrations, (optionally) prep Ollama, then start backend + frontend.
-
+    If the repo is already cloned it will rebase it to ensure it is up to date.
 ### Start only (on later runs):
 
     python setup.py --start
