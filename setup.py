@@ -67,6 +67,39 @@ def find_manage_py(project_dir: Path) -> tuple[Path, Path] | None:
     return None
 
 # --- Environment setup -------------------------------------------------------
+def run_capture(cmd, cwd=None):
+    return subprocess.run(
+        cmd, cwd=cwd, shell=False, check=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    ).stdout.strip()
+
+def create_or_use_repo(url, project_dir: Path, skip_clone=False):
+    if project_dir.exists():
+        # If it’s already a git repo, just update it
+        if (project_dir / ".git").exists():
+            print(f"✓ Using existing repo at {project_dir}")
+            try:
+                # show current branch
+                branch = run_capture(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=str(project_dir))
+                print(f"Updating branch: {branch}")
+                # get latest and fast-forward/rebase
+                run(["git", "fetch", "--all", "--prune"], cwd=str(project_dir))
+                # --autostash lets it rebase even if you have local edits
+                run(["git", "pull", "--rebase", "--autostash", "origin", branch], cwd=str(project_dir))
+            except subprocess.CalledProcessError:
+                print("⚠ Git update failed; continuing with existing files.")
+            return
+        # Exists but not a git repo
+        if skip_clone:
+            sys.exit(f"ERROR: {project_dir} exists but is not a git repo, and --skip-clone was provided.")
+        else:
+            sys.exit(f"ERROR: {project_dir} exists but is not a git repo. Remove it or point --dir elsewhere.")
+    else:
+        if skip_clone:
+            sys.exit(f"ERROR: {project_dir} not found and --skip-clone provided.")
+        print(f"Cloning {url} into {project_dir} …")
+        run(["git", "clone", url, str(project_dir)])
+
 def ensure_git_available():
     if not which("git"):
         sys.exit("ERROR: Git not found. Please install Git and retry.")
@@ -169,13 +202,10 @@ def main():
     p.add_argument("--skip-spacy", action="store_true")
     args = p.parse_args()
 
+    # If already at repo root (has .git or common top-level dirs), use CWD
+    if (Path.cwd() / ".git").exists() or (Path.cwd() / "backend").exists() or (Path.cwd() / "frontend").exists():
+        args.dir = "."
     target = Path(args.dir).resolve()
-    print(dedent(f"""
-    === NLP-Insights Capstone Bootstrap ===
-    OS: {platform.system()} {platform.release()}
-    Python: {sys.version.split()[0]}
-    Directory: {target}
-    """))
 
     ensure_git_available()
     ensure_node_npm_available()
