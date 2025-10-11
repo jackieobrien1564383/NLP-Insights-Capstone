@@ -30,15 +30,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Render: leave DJANGO_DEBUG unset (or set to 0) so DEBUG=False.
 DEBUG = os.environ.get("DJANGO_DEBUG", "") == "1"
 
-# --- NLTK_DATA=/opt/render/nltk_data ensures required corpora at startup (punkt, punkt_tab, averaged_perceptron_tagger_eng) -----------------------------------------------------------
-os.environ.setdefault("NLTK_DATA", "/opt/render/nltk_data")
-os.makedirs(os.environ["NLTK_DATA"], exist_ok=True)
+# Prefer an env var (e.g., Render sets NLTK_DATA=/opt/render/nltk_data).
+# Otherwise, keep NLTK data inside the project for local dev.
+NLTK_DATA_DIR = os.environ.get("NLTK_DATA") or str(BASE_DIR / "nltk_data")
+os.environ["NLTK_DATA"] = NLTK_DATA_DIR
+os.makedirs(NLTK_DATA_DIR, exist_ok=True)
 
 def ensure(path, download_name):
     try:
         nltk.data.find(path)
     except LookupError:
-        nltk.download(download_name, download_dir=os.environ["NLTK_DATA"], quiet=True)
+        nltk.download(download_name, download_dir=NLTK_DATA_DIR, quiet=True)
 
 # Tokenizers (support old/new layouts)
 ensure("tokenizers/punkt", "punkt")
