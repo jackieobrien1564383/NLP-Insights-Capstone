@@ -17,7 +17,7 @@ from textwrap import dedent
 REPO_URL = "https://github.com/Nathan-J-22450784/NLP-Insights-Capstone.git"
 DEFAULT_PROJECT_DIRNAME = "NLP-Insights-Capstone"
 FRONTEND_SUBDIR = "frontend"
-MANAGE_PY = "manage.py"
+MANAGE_PY = Path("backend") / "manage.py"
 SPACY_MODELS = ["en_core_web_sm", "en_core_web_md"]
 
 # --- Utility helpers ---------------------------------------------------------
@@ -43,14 +43,39 @@ def popen(cmd, cwd=None, env=None, new_console=False):
         shell=False, creationflags=creationflags,
     )
 
+def npm_cmd(): #invoke npm.cmd (or call via shell)
+    return "npm.cmd" if is_windows() else "npm"
+
+def find_manage_py(project_dir: Path) -> tuple[Path, Path] | None:
+    """
+    Find manage.py and return (manage_py_path, work_dir).
+    Tries common locations, or falls back to a search.
+    """
+    candidates = [
+        project_dir / "manage.py",
+        project_dir / "backend" / "manage.py",
+    ]
+    for p in candidates:
+        if p.exists():
+            return p, p.parent
+
+    # last resort: search (first hit)
+    hits = list(project_dir.rglob("manage.py"))
+    if hits:
+        p = hits[0]
+        return p, p.parent
+    return None
+
 # --- Environment setup -------------------------------------------------------
 def ensure_git_available():
     if not which("git"):
         sys.exit("ERROR: Git not found. Please install Git and retry.")
 
 def ensure_node_npm_available():
-    if not which("node") or not which("npm"):
-        sys.exit("ERROR: Node.js (and npm) must be installed and on PATH.")
+    if not which("node"):
+        sys.exit("ERROR: 'node' not found on PATH. Install Node.js and retry.")
+    if not which(npm_cmd()):
+        sys.exit("ERROR: 'npm' not found on PATH. Install Node.js and retry.")
 
 def py_in_venv(venv): return venv / ("Scripts/python.exe" if is_windows() else "bin/python")
 def pip_in_venv(venv): return venv / ("Scripts/pip.exe" if is_windows() else "bin/pip")
@@ -75,7 +100,9 @@ def create_venv(project_dir):
 
 def install_backend(py, project_dir, use_lock):
     req = project_dir / ("backend/backend/requirements-lock.txt" if use_lock else "backend/backend/requirements.txt")
-    print(f"Installing backend deps from {req.name} …")
+    if not req.exists():
+        sys.exit(f"ERROR: requirements file not found at {req}")
+    print(f"Installing backend deps from {req.relative_to(project_dir)} …")
     run([str(py), "-m", "pip", "install", "--upgrade", "pip", "wheel", "setuptools"])
     run([str(py), "-m", "pip", "install", "-r", str(req)])
 
@@ -86,16 +113,19 @@ def download_spacy_models(py, skip=False):
         run([str(py), "-m", "spacy", "download", model])
 
 def run_migrations(py, project_dir):
-    if not (project_dir / MANAGE_PY).exists(): return
-    print("Applying Django migrations …")
-    run([str(py), MANAGE_PY, "migrate"], cwd=str(project_dir))
+    manage_py = project_dir / MANAGE_PY
+    if not manage_py.exists():
+        print(f"⚠ manage.py not found at {manage_py} — skipping migrations.")
+        return
+    print(f"Applying Django migrations … ({manage_py.relative_to(project_dir)})")
+    run([str(py), str(manage_py), "migrate"], cwd=str(project_dir / "backend"))
 
 def install_frontend(project_dir):
     ensure_node_npm_available()
     fe = project_dir / FRONTEND_SUBDIR
     if not fe.exists(): return
     print("Installing frontend dependencies …")
-    run(["npm", "install"], cwd=str(fe))
+    run([npm_cmd(), "install"], cwd=str(fe))
 
 def maybe_setup_ollama(skip, model):
     if skip or not which("ollama"):
@@ -108,8 +138,13 @@ def maybe_setup_ollama(skip, model):
 
 # --- Runtime -----------------------------------------------------------------
 def start_backend(py, project_dir, port):
-    print(f"Starting Django backend on http://localhost:{port}")
-    return popen([str(py), MANAGE_PY, "runserver", f"0.0.0.0:{port}"], cwd=str(project_dir), new_console=True)
+    manage_py = project_dir / MANAGE_PY
+    if not manage_py.exists():
+        print(f"⚠ manage.py not found at {manage_py} — cannot start backend.")
+        return None
+    print(f"Starting Django backend on http://localhost:{port} (cwd=backend/)")
+    return popen([str(py), str(manage_py), "runserver", f"0.0.0.0:{port}"],
+                 cwd=str(project_dir / "backend"), new_console=True)
 
 def start_frontend(project_dir, port=None):
     fe = project_dir / FRONTEND_SUBDIR
@@ -117,7 +152,7 @@ def start_frontend(project_dir, port=None):
     env = os.environ.copy()
     if port: env["PORT"] = str(port)
     print(f"Starting React frontend on http://localhost:{port or 3000}")
-    return popen(["npm", "start"], cwd=str(fe), env=env, new_console=True)
+    return popen([npm_cmd(), "start"], cwd=str(fe), env=env, new_console=True)
 
 # --- Main driver -------------------------------------------------------------
 def main():
